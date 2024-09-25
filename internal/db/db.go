@@ -57,7 +57,7 @@ func ensureDb(db *sql.DB, dbName string, tableName string) error {
 	}
 
 	// create table if it does not exists
-	tableCreationQuery := fmt.Sprintf("CREATE TABLE IF NOT EXISTS %s (id SERIAL PRIMARY KEY, title TEXT, description TEXT, published_at TIMESTAMP, thumbnail_url TEXT[], created_at TIMESTAMP, updated_at TIMESTAMP);", tableName)
+	tableCreationQuery := fmt.Sprintf("CREATE TABLE IF NOT EXISTS %s (id SERIAL PRIMARY KEY, title TEXT, description TEXT, published_at TIMESTAMP, thumbnail_url TEXT[], channel_title TEXT, created_at TIMESTAMP, updated_at TIMESTAMP);", tableName)
 
 	if _, err := db.Exec(tableCreationQuery); err != nil {
 		return err
