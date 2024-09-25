@@ -100,8 +100,22 @@ func createFullTextSearchColumn(db *sql.DB, tableName string, columnName string)
 }
 
 func createFullTextSearchTrigger(db *sql.DB, tableName string, vectorSearchColumnName string) error {
-	_, err := db.Exec(fmt.Sprintf("CREATE TRIGGER %s_fts_trigger BEFORE INSERT OR UPDATE ON %s FOR EACH ROW EXECUTE FUNCTION tsvector_update_trigger(%s, 'pg_catalog.english', title, description);", tableName, tableName, vectorSearchColumnName))
-	return err
+
+	triggerName := fmt.Sprintf("%s_fts_trigger", tableName)
+
+	_, err := db.Exec(fmt.Sprintf("DROP TRIGGER IF EXISTS %s ON %s", triggerName, tableName))
+
+	if err != nil {
+		return err
+	}
+
+	_, err = db.Exec(fmt.Sprintf("CREATE TRIGGER %s BEFORE INSERT OR UPDATE ON %s FOR EACH ROW EXECUTE FUNCTION tsvector_update_trigger(%s, 'pg_catalog.english', title, description);", triggerName, tableName, vectorSearchColumnName))
+
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func createFullTextSearchIndex(db *sql.DB, tableName string, vectorSearchColumnName string) error {

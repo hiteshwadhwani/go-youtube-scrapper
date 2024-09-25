@@ -16,19 +16,21 @@ type YoutubeService struct {
 	searchKey  string
 	maxResults int
 	httpClient *http.Client
+	timeDelay  time.Duration
 }
 
-func New(httpClient *http.Client, apiKey string, searchKey string, maxResults int) *YoutubeService {
+func New(httpClient *http.Client, apiKey string, searchKey string, maxResults int, timeDelay time.Duration) *YoutubeService {
 	return &YoutubeService{
 		apiKey:     apiKey,
 		searchKey:  searchKey,
 		maxResults: maxResults,
 		httpClient: httpClient,
+		timeDelay:  timeDelay,
 	}
 }
 
 func (y *YoutubeService) GetSearchResults() ([]byte, error) {
-	url := fmt.Sprintf("https://youtube.googleapis.com/youtube/v3/search?part=snippet&maxResults=%d&q=%v&key=%v", y.maxResults, y.searchKey, y.apiKey)
+	url := fmt.Sprintf("https://youtube.googleapis.com/youtube/v3/search?part=snippet&maxResults=%d&q=%v&key=%v&publishedAfter=%v", y.maxResults, y.searchKey, y.apiKey, time.Now().UTC().Add(-1*y.timeDelay*time.Second).Format(time.RFC3339))
 
 	resp, err := y.httpClient.Get(url)
 

@@ -2,7 +2,6 @@ package youtubeservice
 
 import (
 	"database/sql"
-	"fmt"
 
 	"github.com/hiteshwadhwani/go-youtube-scrapper.git/pkg/log"
 	"github.com/lib/pq"
@@ -33,8 +32,18 @@ func NewRepository(db *sql.DB, logger log.Logger) *repository {
 }
 
 func (r *repository) Get(params *GetRequestParams) (*[]entity.YoutubeData, error) {
-	fmt.Println(params)
-	rows, err := r.db.Query("SELECT title, description, published_at, thumbnail_url, channel_title, created_at, updated_at FROM youtube_data LIMIT $1 OFFSET $2", params.limit, params.offset)
+	var args []interface{}
+	query := `SELECT title, description, published_at, thumbnail_url, channel_title, created_at, updated_at FROM youtube_data`
+
+	if params.search != "" {
+		query += ` WHERE search_vector @@ to_tsquery('pg_catalog.english', $1::text) LIMIT $2::bigint OFFSET $3::bigint`
+		args = append(args, params.search, params.limit, params.offset)
+	} else {
+		query += ` LIMIT $1::bigint OFFSET $2::bigint`
+		args = append(args, params.limit, params.offset)
+	}
+
+	rows, err := r.db.Query(query, args...)
 
 	if err != nil {
 		r.logger.Error(err)
