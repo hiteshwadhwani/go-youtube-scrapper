@@ -24,22 +24,22 @@ func NewRepository(db *sql.DB, logger log.Logger) *repository {
 }
 
 func (r *repository) Get() {
-	rows, err := r.db.Query("SELECT * FROM youtube")
+	rows, err := r.db.Query("SELECT * FROM youtube_data")
 
 	if err != nil {
-		r.logger.Error("Error getting data from database")
+		r.logger.Error(err)
 	}
 
 	defer rows.Close()
 
-	// for rows.Next(){
-	// 	err := rows.Scan()
+	for rows.Next() {
+		err := rows.Scan()
 
-	// 	if err != nil{
-	// 		r.logger.Error("Error scanning data from database")
-	// 	}
+		if err != nil {
+			r.logger.Error("Error scanning data from database")
+		}
 
-	// }
+	}
 
 	cols, _ := rows.Columns()
 	fmt.Print(cols)

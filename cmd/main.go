@@ -14,11 +14,12 @@ var logger = log.New()
 
 func main() {
 	config := &db.Config{
-		Host:     "localhost",
-		Port:     5432,
-		User:     "postgres",
-		Password: "password",
-		DbName:   "youtube-scrapper",
+		Host:      "localhost",
+		Port:      5432,
+		User:      "postgres",
+		Password:  "password",
+		DbName:    "youtube-scrapper",
+		TableName: "youtube_data",
 	}
 
 	db, err := db.New(config)
@@ -26,9 +27,9 @@ func main() {
 		logger.Error(fmt.Sprintf("Error connecting to database: %v", err))
 	}
 
-	fmt.Print(db)
+	client := &http.Client{}
 
-	youtubeservice.RegisterHandlers()
+	youtubeservice.RegisterHandlers(client, db, logger)
 
 	http.ListenAndServe(":8080", nil)
 }
