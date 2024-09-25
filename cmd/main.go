@@ -40,6 +40,7 @@ func main() {
 	db, err := db.New(dbConfig)
 	if err != nil {
 		logger.Error(fmt.Sprintf("Error connecting to database: %v", err))
+		os.Exit(1)
 	}
 
 	defer db.Close()

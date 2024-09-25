@@ -62,10 +62,16 @@ func ensureDb(db *sql.DB, dbName string, tableName string) error {
 
 	// create table if it does not exists
 	tableCreationQuery := fmt.Sprintf("CREATE TABLE IF NOT EXISTS %s (id SERIAL PRIMARY KEY, title TEXT, description TEXT, published_at TIMESTAMP, thumbnail_url TEXT[], channel_title TEXT, created_at TIMESTAMP, updated_at TIMESTAMP);", tableName)
-
-	createFullTextSearch(db, tableName, vectorSearchColumnName)
-
 	if _, err := db.Exec(tableCreationQuery); err != nil {
+		return err
+	}
+
+	// create index on published_at and created_at for faster search
+	if err := createIndexes(db, tableName); err != nil {
+		return err
+	}
+
+	if err := createFullTextSearch(db, tableName, vectorSearchColumnName); err != nil {
 		return err
 	}
 
@@ -101,4 +107,21 @@ func createFullTextSearchTrigger(db *sql.DB, tableName string, vectorSearchColum
 func createFullTextSearchIndex(db *sql.DB, tableName string, vectorSearchColumnName string) error {
 	_, err := db.Exec(fmt.Sprintf("CREATE INDEX IF NOT EXISTS %s_fts_idx ON %s USING GIN(%s);", tableName, tableName, vectorSearchColumnName))
 	return err
+}
+
+func createIndexes(db *sql.DB, tableName string) error {
+
+	sqlQueries := []string{
+		fmt.Sprintf("CREATE INDEX IF NOT EXISTS %s ON %s (%s)", "published_at_idx", tableName, "published_at"),
+		fmt.Sprintf("CREATE INDEX IF NOT EXISTS %s ON %s (%s)", "created_at_idx", tableName, "created_at"),
+	}
+
+	for _, query := range sqlQueries {
+		_, err := db.Exec(query)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
