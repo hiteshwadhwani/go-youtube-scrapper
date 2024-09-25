@@ -44,18 +44,17 @@ func main() {
 
 	defer db.Close()
 
-	data_channel := make(chan []entity.YoutubeData)
-
 	client := &http.Client{}
 
-	youtubeservice.RegisterHandlers(client, db, logger)
-
+	data_channel := make(chan []entity.YoutubeData)
 	// this go routine will schedule the cron job to fetch data from youtube api
 	service := youtubeCronService.New(client, config.YoutubeApiKey, config.YoutubeSearchQuery, config.MaxResults)
-	service.ScheduleVideoDetailsUpdate(10, data_channel)
-
+	service.ScheduleVideoDetailsUpdate(10, data_channel, logger)
 	// this go routine will listen to youtube api cron and insert data into database
 	go insertYoutubeCronData(db, data_channel)
+
+	// this will register the http handlers
+	youtubeservice.RegisterHandlers(client, db, logger)
 
 	http.ListenAndServe(":8080", nil)
 }

@@ -8,6 +8,7 @@ import (
 	"time"
 
 	entity "github.com/hiteshwadhwani/go-youtube-scrapper.git/pkg/entity"
+	"github.com/hiteshwadhwani/go-youtube-scrapper.git/pkg/log"
 )
 
 type YoutubeService struct {
@@ -53,6 +54,12 @@ func (y *YoutubeService) GetVideoDetails(data []byte) []entity.YoutubeData {
 
 	var entityItems []entity.YoutubeData
 
+	_, ok := youtubeData["items"].([]interface{})
+
+	if !ok {
+		return entityItems
+	}
+
 	for _, item := range youtubeData["items"].([]interface{}) {
 		data := entity.YoutubeData{
 			CreatedAt: time.Now().UTC(),
@@ -94,12 +101,13 @@ func (y *YoutubeService) GetVideoDetails(data []byte) []entity.YoutubeData {
 	return entityItems
 }
 
-func (y *YoutubeService) ScheduleVideoDetailsUpdate(delay time.Duration, channel chan []entity.YoutubeData) {
+func (y *YoutubeService) ScheduleVideoDetailsUpdate(delay time.Duration, channel chan []entity.YoutubeData, logger log.Logger) {
 	ticker := time.NewTicker(delay * time.Second)
 	go func() {
 		for range ticker.C {
 			if data, err := y.GetSearchResults(); err == nil {
 				channel <- y.GetVideoDetails(data)
+				logger.Info("Data fetched from youtube api")
 			}
 		}
 	}()
