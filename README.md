@@ -1,15 +1,17 @@
 ## Youtube scrapper
 
-API server built to continuously fetch and store the latest videos data from YouTube based on a predefined search query. The server provides endpoints for paginated access to the stored video data, as well as a search param for full text search
+API server built to continuously fetch and store the latest video data from YouTube based on a predefined search query. The server provides endpoints for paginated access to the stored video data, as well as a search param for full-text search
 
 
 ## Features
 
-Fetches the latest videos every 10 seconds (customize it using env) using YouTube's Data API v3 and saves them into a PostgreSQL database.
+✅ Fetches the latest videos every 10 seconds (customize it using env) using YouTube's Data API v3 and saves them into a PostgreSQL database.
 
-API to return data reverse chronological order with pagination and full text search
+✅ API to return data reverse chronological order with pagination and full text search
 
-indexes for quick retrieval
+✅ appropriate indexes for faster read
+
+✅ API key manager to rotate keys when youtube api quota exceeds
 ## API Reference
 
 #### Get youtube data
