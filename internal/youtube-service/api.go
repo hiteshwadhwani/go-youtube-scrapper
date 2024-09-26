@@ -26,7 +26,7 @@ func RegisterHandlers(client *http.Client, db *sql.DB, logger log.Logger) {
 		logger:  logger,
 		service: service,
 	}
-	http.HandleFunc("/api/v1", httpHandler.Get)
+	http.HandleFunc("/api/v1/youtube-data", httpHandler.Get)
 }
 
 func (h *handler) Get(w http.ResponseWriter, r *http.Request) {
