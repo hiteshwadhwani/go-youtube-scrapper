@@ -52,7 +52,7 @@ func (r *repository) Get(params *GetRequestParams) (*[]entity.YoutubeData, error
 
 	defer rows.Close()
 
-	var response []entity.YoutubeData
+	response := make([]entity.YoutubeData, 0)
 
 	for rows.Next() {
 		var data entity.YoutubeData
