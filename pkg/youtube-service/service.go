@@ -7,21 +7,22 @@ import (
 	"net/http"
 	"time"
 
+	apikeymanager "github.com/hiteshwadhwani/go-youtube-scrapper.git/pkg/api-key-manager"
 	entity "github.com/hiteshwadhwani/go-youtube-scrapper.git/pkg/entity"
 	"github.com/hiteshwadhwani/go-youtube-scrapper.git/pkg/log"
 )
 
 type YoutubeService struct {
-	apiKey     string
+	manager    *apikeymanager.Manager
 	searchKey  string
 	maxResults int
 	httpClient *http.Client
 	timeDelay  time.Duration
 }
 
-func New(httpClient *http.Client, apiKey string, searchKey string, maxResults int, timeDelay time.Duration) *YoutubeService {
+func New(httpClient *http.Client, manager *apikeymanager.Manager, searchKey string, maxResults int, timeDelay time.Duration) *YoutubeService {
 	return &YoutubeService{
-		apiKey:     apiKey,
+		manager:    manager,
 		searchKey:  searchKey,
 		maxResults: maxResults,
 		httpClient: httpClient,
@@ -30,23 +31,35 @@ func New(httpClient *http.Client, apiKey string, searchKey string, maxResults in
 }
 
 func (y *YoutubeService) GetSearchResults() ([]byte, error) {
-	url := fmt.Sprintf("https://youtube.googleapis.com/youtube/v3/search?part=snippet&maxResults=%d&q=%v&key=%v&publishedAfter=%v", y.maxResults, y.searchKey, y.apiKey, time.Now().UTC().Add(-1*y.timeDelay*time.Second).Format(time.RFC3339))
+	for {
+		apiKey := y.manager.GetNextKey()
+		if apiKey == "" {
+			return nil, fmt.Errorf("api Key quota exceeded")
+		}
 
-	resp, err := y.httpClient.Get(url)
+		url := fmt.Sprintf("https://youtube.googleapis.com/youtube/v3/search?part=snippet&maxResults=%d&q=%v&key=%v&publishedAfter=%v", y.maxResults, y.searchKey, apiKey, time.Now().UTC().Add(-1*y.timeDelay*time.Second).Format(time.RFC3339))
 
-	if err != nil {
-		return nil, err
+		resp, err := y.httpClient.Get(url)
+
+		if resp.StatusCode == 403 {
+			y.manager.MarkQuotaExceed()
+			continue
+		}
+
+		if err != nil {
+			return nil, err
+		}
+
+		defer resp.Body.Close()
+
+		data, err := io.ReadAll(resp.Body)
+
+		if err != nil {
+			return nil, err
+		}
+
+		return data, nil
 	}
-
-	defer resp.Body.Close()
-
-	data, err := io.ReadAll(resp.Body)
-
-	if err != nil {
-		return nil, err
-	}
-
-	return data, nil
 }
 
 func (y *YoutubeService) GetVideoDetails(data []byte) []entity.YoutubeData {

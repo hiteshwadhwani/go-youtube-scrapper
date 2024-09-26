@@ -9,6 +9,7 @@ import (
 
 	"github.com/hiteshwadhwani/go-youtube-scrapper.git/internal/config"
 	"github.com/hiteshwadhwani/go-youtube-scrapper.git/internal/db"
+	apikeymanager "github.com/hiteshwadhwani/go-youtube-scrapper.git/pkg/api-key-manager"
 	"github.com/hiteshwadhwani/go-youtube-scrapper.git/pkg/entity"
 	"github.com/hiteshwadhwani/go-youtube-scrapper.git/pkg/log"
 	"github.com/lib/pq"
@@ -38,6 +39,8 @@ func main() {
 		TableName: config.TableName,
 	}
 
+	manager := apikeymanager.New([]string{config.YoutubeApiKey})
+
 	db, err := db.New(dbConfig)
 	if err != nil {
 		logger.Error(fmt.Sprintf("Error connecting to database: %v", err))
@@ -50,7 +53,7 @@ func main() {
 
 	data_channel := make(chan []entity.YoutubeData)
 	// this go routine will schedule the cron job to fetch data from youtube api
-	service := youtubeCronService.New(client, config.YoutubeApiKey, config.YoutubeSearchQuery, config.MaxResults, time.Duration(config.CronDelay))
+	service := youtubeCronService.New(client, manager, config.YoutubeSearchQuery, config.MaxResults, time.Duration(config.CronDelay))
 	service.ScheduleVideoDetailsUpdate(time.Duration(config.CronDelay), data_channel, logger)
 	// this go routine will listen to youtube api cron and insert data into database
 	go insertYoutubeCronData(db, data_channel)

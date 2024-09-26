@@ -36,10 +36,10 @@ func (r *repository) Get(params *GetRequestParams) (*[]entity.YoutubeData, error
 	query := `SELECT title, description, published_at, thumbnail_url, channel_title, created_at, updated_at FROM youtube_data`
 
 	if params.search != "" {
-		query += ` WHERE search_vector @@ to_tsquery('pg_catalog.english', $1::text) LIMIT $2::bigint OFFSET $3::bigint`
+		query += ` WHERE search_vector @@ to_tsquery('pg_catalog.english', $1::text) ORDER BY published_at LIMIT DESC $2::bigint OFFSET $3::bigint`
 		args = append(args, params.search, params.limit, params.offset)
 	} else {
-		query += ` LIMIT $1::bigint OFFSET $2::bigint`
+		query += ` ORDER BY published_at DESC LIMIT $1::bigint OFFSET $2::bigint`
 		args = append(args, params.limit, params.offset)
 	}
 
